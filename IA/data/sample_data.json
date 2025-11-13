@@ -1,0 +1,13 @@
+{
+  "season": "2025",
+  "race": "Gran Premio de ejemplo",
+  "drivers": [
+    {"id": "ham", "name": "Lewis Hamilton", "team": "Mercedes", "points": 312, "number": 44},
+    {"id": "ver", "name": "Max Verstappen", "team": "Red Bull", "points": 286, "number": 1},
+    {"id": "lec", "name": "Charles Leclerc", "team": "Ferrari", "points": 210, "number": 16}
+  ],
+  "calendar": [
+    {"round": 1, "name": "Bahrain", "date": "2025-03-30"},
+    {"round": 2, "name": "Saudi Arabia", "date": "2025-04-06"}
+  ]
+}
