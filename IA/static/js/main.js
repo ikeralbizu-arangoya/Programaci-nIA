@@ -1,11 +1,13 @@
+// main.js
 document.addEventListener("DOMContentLoaded", function() {
+  // Botones info piloto (si existen)
   document.querySelectorAll('.btn-info-driver').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = btn.dataset.id;
-      alert("Mostrar info del piloto: " + id + "\n(Aquí puedes abrir un modal con más datos)");
+    btn.addEventListener('click', () => {
+      alert("Función Info de piloto: " + btn.dataset.id);
     });
   });
 
+  // Ergast loader (si existe botón)
   const ergastBtn = document.getElementById('btn-load-ergast');
   if (ergastBtn) {
     ergastBtn.addEventListener('click', () => {
@@ -16,11 +18,9 @@ document.addEventListener("DOMContentLoaded", function() {
           target.innerHTML = "<div class='text-danger'>Error: " + data.error + "</div>";
           return;
         }
-        // Mostrar de forma simple
         try {
           const race = data.MRData.RaceTable.Races[0];
-          let html = `<h6>${race.raceName} — ${race.Circuit.circuitName}</h6>`;
-          html += "<ol>";
+          let html = `<h6>${race.raceName} — ${race.Circuit.circuitName}</h6><ol>`;
           race.Results.slice(0,5).forEach(res => {
             html += `<li>${res.position} - ${res.Driver.givenName} ${res.Driver.familyName} (${res.Constructor.name})</li>`;
           });
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function() {
           target.innerHTML = "<div class='text-danger'>No hay datos disponibles</div>";
         }
       }).catch(err => {
-        target.innerHTML = "<div class='text-danger'>Error al conectar: " + err + "</div>";
+        target.innerHTML = "<div class='text-danger'>Error al conectar</div>";
       });
     });
   }
