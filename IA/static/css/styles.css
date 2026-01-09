@@ -1,4 +1,26 @@
+/* styles.css */
 body {
-  background: #f7f9fc;
+  background: #070708;
+  color: #e8e8e8;
+  font-family: "Helvetica Neue", Arial, sans-serif;
 }
-.card { box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
+
+.hero-bg {
+  background: linear-gradient(135deg, #2b0000, #0f0f0f);
+  border-radius: 8px;
+  padding: 2.5rem;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.card img {
+  object-fit: cover;
+  max-height: 220px;
+}
+
+.list-group-item {
+  border: none;
+}
