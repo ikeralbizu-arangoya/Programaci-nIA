@@ -1,0 +1,16 @@
+{
+  "name": "f1-fp-project",
+  "version": "1.0.0",
+  "description": "Proyecto FP Web Formula 1 con Node.js y MySQL",
+  "main": "backend/app.js",
+  "scripts": {
+    "start": "node backend/app.js"
+  },
+  "author": "Alumno FP",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "cors": "^2.8.5"
+  }
+}

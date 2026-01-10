@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Panel de Administración F1</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header>PANEL ADMIN - FORMULA 1</header>
+
+<section>
+<h2>Gestión de Resultados</h2>
+<input id="season" placeholder="Temporada">
+<input id="race" placeholder="Carrera">
+<input id="winner" placeholder="Ganador">
+<input id="team" placeholder="Equipo">
+<input id="points" placeholder="Puntos">
+<button onclick="addResult()">Añadir Resultado</button>
+</section>
+
+<section>
+<h2>Resultados Actuales</h2>
+<div id="adminResults"></div>
+</section>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
