@@ -1,0 +1,576 @@
+-- ================================
+-- CREAR BASE DE DATOS
+-- ================================
+CREATE DATABASE f1_project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE f1_project;
+
+-- ================================
+-- TABLA: usuarios (admin panel)
+-- ================================
+CREATE TABLE usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    rol ENUM('admin', 'user') DEFAULT 'user',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insertar admin por defecto (password: admin123)
+INSERT INTO usuarios (username, password, email, rol) 
+VALUES ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@f1project.com', 'admin');
+
+-- ================================
+-- TABLA: temporadas
+-- ================================
+CREATE TABLE temporadas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    año INT NOT NULL UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    activa BOOLEAN DEFAULT FALSE
+);
+
+INSERT INTO temporadas (año, nombre, activa) VALUES 
+(2024, 'Temporada 2024', TRUE),
+(2023, 'Temporada 2023', FALSE),
+(2022, 'Temporada 2022', FALSE);
+
+-- ================================
+-- TABLA: equipos
+-- ================================
+CREATE TABLE equipos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    color_principal VARCHAR(7) NOT NULL,
+    color_secundario VARCHAR(7),
+    logo_url VARCHAR(255),
+    pais VARCHAR(50)
+);
+
+INSERT INTO equipos (nombre, color_principal, color_secundario, pais) VALUES 
+('Red Bull Racing', '#1E41FF', '#FCD700', 'Austria'),
+('Ferrari', '#DC0000', '#FFFFFF', 'Italia'),
+('Mercedes', '#00D2BE', '#000000', 'Alemania'),
+('McLaren', '#FF8700', '#47C7FC', 'Reino Unido'),
+('Aston Martin', '#006F62', '#00352F', 'Reino Unido'),
+('Alpine', '#0090FF', '#FF87BC', 'Francia'),
+('Williams', '#005AFF', '#FFFFFF', 'Reino Unido'),
+('AlphaTauri', '#2B4562', '#FFFFFF', 'Italia'),
+('Alfa Romeo', '#900000', '#FFFFFF', 'Suiza'),
+('Haas', '#FFFFFF', '#787878', 'Estados Unidos');
+
+-- ================================
+-- TABLA: pilotos
+-- ================================
+CREATE TABLE pilotos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    numero INT NOT NULL,
+    equipo_id INT NOT NULL,
+    nacionalidad VARCHAR(50),
+    fecha_nacimiento DATE,
+    foto_url VARCHAR(255),
+    FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE
+);
+
+INSERT INTO pilotos (nombre, apellido, numero, equipo_id, nacionalidad) VALUES 
+('Max', 'Verstappen', 1, 1, 'Holanda'),
+('Sergio', 'Pérez', 11, 1, 'México'),
+('Charles', 'Leclerc', 16, 2, 'Mónaco'),
+('Carlos', 'Sainz', 55, 2, 'España'),
+('Lewis', 'Hamilton', 44, 3, 'Reino Unido'),
+('George', 'Russell', 63, 3, 'Reino Unido'),
+('Lando', 'Norris', 4, 4, 'Reino Unido'),
+('Oscar', 'Piastri', 81, 4, 'Australia');
+
+-- ================================
+-- TABLA: circuitos
+-- ================================
+CREATE TABLE circuitos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    pais VARCHAR(50) NOT NULL,
+    ciudad VARCHAR(100),
+    longitud_km DECIMAL(5,3),
+    vueltas INT,
+    imagen_url VARCHAR(255)
+);
+
+INSERT INTO circuitos (nombre, pais, ciudad, longitud_km, vueltas) VALUES 
+('Bahrain International Circuit', 'Bahréin', 'Sakhir', 5.412, 57),
+('Jeddah Corniche Circuit', 'Arabia Saudita', 'Jeddah', 6.174, 50),
+('Albert Park Circuit', 'Australia', 'Melbourne', 5.278, 58),
+('Baku City Circuit', 'Azerbaiyán', 'Bakú', 6.003, 51),
+('Circuit de Monaco', 'Mónaco', 'Montecarlo', 3.337, 78),
+('Circuit de Barcelona-Catalunya', 'España', 'Barcelona', 4.675, 66),
+('Circuit Gilles Villeneuve', 'Canadá', 'Montreal', 4.361, 70),
+('Red Bull Ring', 'Austria', 'Spielberg', 4.318, 71),
+('Silverstone Circuit', 'Reino Unido', 'Silverstone', 5.891, 52),
+('Hungaroring', 'Hungría', 'Budapest', 4.381, 70);
+
+-- ================================
+-- TABLA: grandes_premios
+-- ================================
+CREATE TABLE grandes_premios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temporada_id INT NOT NULL,
+    circuito_id INT NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    fecha DATE NOT NULL,
+    ronda INT NOT NULL,
+    FOREIGN KEY (temporada_id) REFERENCES temporadas(id) ON DELETE CASCADE,
+    FOREIGN KEY (circuito_id) REFERENCES circuitos(id) ON DELETE CASCADE
+);
+
+-- Ejemplo de datos para 2024
+INSERT INTO grandes_premios (temporada_id, circuito_id, nombre, fecha, ronda) VALUES 
+(1, 1, 'Gran Premio de Bahréin', '2024-03-02', 1),
+(1, 2, 'Gran Premio de Arabia Saudita', '2024-03-09', 2),
+(1, 3, 'Gran Premio de Australia', '2024-03-24', 3),
+(1, 4, 'Gran Premio de Azerbaiyán', '2024-04-28', 4),
+(1, 5, 'Gran Premio de Mónaco', '2024-05-26', 5);
+
+-- ================================
+-- TABLA: resultados_carreras
+-- ================================
+CREATE TABLE resultados_carreras (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    gran_premio_id INT NOT NULL,
+    piloto_id INT NOT NULL,
+    posicion INT NOT NULL,
+    puntos DECIMAL(5,2) DEFAULT 0,
+    tiempo VARCHAR(50),
+    vueltas_completadas INT,
+    estado ENUM('Finalizado', 'Retirado', 'Descalificado', 'No Clasificado') DEFAULT 'Finalizado',
+    FOREIGN KEY (gran_premio_id) REFERENCES grandes_premios(id) ON DELETE CASCADE,
+    FOREIGN KEY (piloto_id) REFERENCES pilotos(id) ON DELETE CASCADE
+);
+
+-- Datos ejemplo (Gran Premio Bahréin 2024)
+INSERT INTO resultados_carreras (gran_premio_id, piloto_id, posicion, puntos, vueltas_completadas) VALUES 
+(1, 1, 1, 25, 57),
+(1, 2, 2, 18, 57),
+(1, 3, 3, 15, 57),
+(1, 5, 4, 12, 57),
+(1, 7, 5, 10, 57);
+
+-- ================================
+-- TABLA: clasificacion_pilotos
+-- ================================
+CREATE TABLE clasificacion_pilotos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temporada_id INT NOT NULL,
+    piloto_id INT NOT NULL,
+    puntos_totales DECIMAL(6,2) DEFAULT 0,
+    posicion INT,
+    FOREIGN KEY (temporada_id) REFERENCES temporadas(id) ON DELETE CASCADE,
+    FOREIGN KEY (piloto_id) REFERENCES pilotos(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_temporada_piloto (temporada_id, piloto_id)
+);
+
+-- ================================
+-- TABLA: clasificacion_constructores
+-- ================================
+CREATE TABLE clasificacion_constructores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temporada_id INT NOT NULL,
+    equipo_id INT NOT NULL,
+    puntos_totales DECIMAL(6,2) DEFAULT 0,
+    posicion INT,
+    FOREIGN KEY (temporada_id) REFERENCES temporadas(id) ON DELETE CASCADE,
+    FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_temporada_equipo (temporada_id, equipo_id)
+);
+
+-- ================================
+-- TABLA: productos_merchandising
+-- ================================
+CREATE TABLE productos_merchandising (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    equipo_id INT,
+    categoria ENUM('Camiseta', 'Gorra', 'Chaqueta', 'Accesorio', 'Coleccionable', 'Otro') NOT NULL,
+    stock INT DEFAULT 0,
+    imagen_url VARCHAR(255),
+    destacado BOOLEAN DEFAULT FALSE,
+    fecha_agregado TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (equipo_id) REFERENCES equipos(id) ON DELETE SET NULL
+);
+
+INSERT INTO productos_merchandising (nombre, descripcion, precio, equipo_id, categoria, stock, destacado) VALUES 
+('Camiseta Red Bull Racing 2024', 'Camiseta oficial del equipo Red Bull Racing temporada 2024', 79.99, 1, 'Camiseta', 150, TRUE),
+('Gorra Ferrari Scuderia', 'Gorra oficial Ferrari con logo bordado', 39.99, 2, 'Gorra', 200, TRUE),
+('Chaqueta Mercedes AMG', 'Chaqueta técnica Mercedes AMG Petronas', 149.99, 3, 'Chaqueta', 75, FALSE),
+('Camiseta McLaren Papaya', 'Camiseta McLaren Racing en color papaya', 74.99, 4, 'Camiseta', 120, TRUE),
+('Gorra Aston Martin', 'Gorra Aston Martin F1 Team', 44.99, 5, 'Gorra', 180, FALSE);
+
+-- ================================
+-- TABLA: tipos_entradas
+-- ================================
+CREATE TABLE tipos_entradas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    beneficios TEXT,
+    color VARCHAR(7) DEFAULT '#000000'
+);
+
+INSERT INTO tipos_entradas (nombre, descripcion, precio, beneficios, color) VALUES 
+('General', 'Acceso general al circuito', 199.99, 'Acceso a gradas generales|Vista de la carrera|Pantallas gigantes', '#4A5568'),
+('Tribuna Principal', 'Asiento en la tribuna principal', 499.99, 'Asiento numerado|Vista privilegiada|Acceso a zona VIP|Pantalla personal', '#2D3748'),
+('Paddock Club', 'Experiencia VIP completa', 1999.99, 'Acceso al paddock|Comida y bebida incluida|Meet & Greet con pilotos|Asiento premium|Regalos exclusivos', '#D69E2E'),
+('Weekend Pass', 'Acceso a todo el fin de semana', 399.99, 'Viernes, Sábado y Domingo|Entrenamientos libres|Clasificación|Carrera|Gradas generales', '#38A169');
+
+-- ================================
+-- TABLA: entradas_disponibles
+-- ================================
+CREATE TABLE entradas_disponibles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    gran_premio_id INT NOT NULL,
+    tipo_entrada_id INT NOT NULL,
+    cantidad_disponible INT NOT NULL,
+    fecha_venta_inicio DATE,
+    fecha_venta_fin DATE,
+    activa BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (gran_premio_id) REFERENCES grandes_premios(id) ON DELETE CASCADE,
+    FOREIGN KEY (tipo_entrada_id) REFERENCES tipos_entradas(id) ON DELETE CASCADE
+);
+
+-- ================================
+-- TABLA: pedidos_entradas
+-- ================================
+CREATE TABLE pedidos_entradas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_cliente VARCHAR(100) NOT NULL,
+    email_cliente VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    entrada_disponible_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_total DECIMAL(10,2) NOT NULL,
+    estado ENUM('Pendiente', 'Confirmado', 'Cancelado') DEFAULT 'Pendiente',
+    fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entrada_disponible_id) REFERENCES entradas_disponibles(id) ON DELETE CASCADE
+);
+
+-- ================================
+-- TABLA: pedidos_merchandising
+-- ================================
+CREATE TABLE pedidos_merchandising (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_cliente VARCHAR(100) NOT NULL,
+    email_cliente VARCHAR(100) NOT NULL,
+    direccion_envio TEXT NOT NULL,
+    telefono VARCHAR(20),
+    total DECIMAL(10,2) NOT NULL,
+    estado ENUM('Pendiente', 'Procesando', 'Enviado', 'Entregado', 'Cancelado') DEFAULT 'Pendiente',
+    fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ================================
+-- TABLA: detalle_pedidos_merchandising
+-- ================================
+CREATE TABLE detalle_pedidos_merchandising (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pedido_id INT NOT NULL,
+    producto_id INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos_merchandising(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos_merchandising(id) ON DELETE CASCADE
+);
+
+-- ================================
+-- TABLA: noticias
+-- ================================
+CREATE TABLE noticias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(200) NOT NULL,
+    contenido TEXT NOT NULL,
+    resumen VARCHAR(500),
+    imagen_url VARCHAR(255),
+    autor VARCHAR(100),
+    categoria ENUM('Carrera', 'Equipo', 'Piloto', 'Técnica', 'Rumor', 'Otros') DEFAULT 'Otros',
+    destacada BOOLEAN DEFAULT FALSE,
+    fecha_publicacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    vistas INT DEFAULT 0
+);
+
+INSERT INTO noticias (titulo, contenido, resumen, categoria, destacada) VALUES 
+('Verstappen logra su cuarta victoria consecutiva', 'Max Verstappen se impone en el Gran Premio de Bahréin...', 'El piloto holandés demuestra su superioridad una vez más', 'Carrera', TRUE),
+('Ferrari presenta mejoras aerodinámicas', 'La Scuderia Ferrari ha revelado nuevas actualizaciones...', 'El equipo italiano busca acortar distancias con Red Bull', 'Equipo', TRUE),
+('Hamilton firma nuevo contrato con Mercedes', 'Lewis Hamilton extiende su vinculación con Mercedes hasta 2025...', 'El heptacampeón continúa su legado con las Flechas de Plata', 'Piloto', FALSE);
+
+INSERT INTO clasificacion_pilotos (temporada_id, piloto_id, puntos_totales, posicion) VALUES
+(1, 1, 437, 1),
+(1, 7, 374, 2),
+(1, 3, 356, 3),
+(1, 8, 292, 4),
+(1, 4, 290, 5),
+(1, 6, 245, 6),
+(1, 5, 223, 7),
+(1, 2, 152, 8);
+
+USE f1_project;
+
+-- ================================
+-- LIMPIAR DATOS ANTIGUOS
+-- ================================
+DELETE FROM noticias;
+DELETE FROM detalle_pedidos_merchandising;
+DELETE FROM pedidos_merchandising;
+DELETE FROM pedidos_entradas;
+DELETE FROM entradas_disponibles;
+DELETE FROM tipos_entradas;
+DELETE FROM productos_merchandising;
+DELETE FROM clasificacion_constructores;
+DELETE FROM clasificacion_pilotos;
+DELETE FROM resultados_carreras;
+DELETE FROM grandes_premios;
+DELETE FROM pilotos;
+DELETE FROM equipos;
+DELETE FROM temporadas;
+
+-- ================================
+-- TABLA: temporadas (2026)
+-- ================================
+INSERT INTO temporadas (año, nombre, descripcion, activa) VALUES
+(2026, 'Temporada 2026', 'Campeonato Mundial de Fórmula 1 2026', TRUE);
+
+-- ================================
+-- TABLA: equipos
+-- ================================
+INSERT INTO equipos (nombre, color_principal, color_secundario, pais) VALUES 
+('Red Bull Racing', '#1E41FF', '#FCD700', 'Austria'),
+('Ferrari', '#DC0000', '#FFFFFF', 'Italia'),
+('Mercedes', '#00D2BE', '#000000', 'Alemania'),
+('McLaren', '#FF8700', '#47C7FC', 'Reino Unido'),
+('Aston Martin', '#006F62', '#00352F', 'Reino Unido'),
+('Alpine', '#0090FF', '#FF87BC', 'Francia'),
+('Williams', '#005AFF', '#FFFFFF', 'Reino Unido'),
+('Haas', '#FFFFFF', '#787878', 'EEUU'),
+('Audi', '#000000', '#E60000', 'Alemania'),
+('Cadillac', '#000000', '#FFD700', 'EEUU');
+
+-- ================================
+-- TABLA: pilotos
+-- ================================
+INSERT INTO pilotos (nombre, apellido, numero, equipo_id, nacionalidad) VALUES
+('Max', 'Verstappen', 1, 1, 'Países Bajos'),
+('Sergio', 'Pérez', 11, 1, 'México'),
+('Charles', 'Leclerc', 16, 2, 'Mónaco'),
+('Carlos', 'Sainz', 55, 2, 'España'),
+('Lewis', 'Hamilton', 44, 3, 'Reino Unido'),
+('George', 'Russell', 63, 3, 'Reino Unido'),
+('Lando', 'Norris', 4, 4, 'Reino Unido'),
+('Oscar', 'Piastri', 81, 4, 'Australia'),
+('Fernando', 'Alonso', 14, 5, 'España'),
+('Lance', 'Stroll', 18, 5, 'Canadá'),
+('Alexander', 'Albon', 23, 6, 'Reino Unido'),
+('Esteban', 'Ocon', 31, 6, 'Francia'),
+('Pierre', 'Gasly', 10, 7, 'Francia'),
+('Franco', 'Colapinto', 25, 7, 'Argentina'),
+('Nico', 'Hulkenberg', 27, 8, 'Alemania'),
+('Gabriel', 'Bortoleto', 5, 8, 'Brasil'),
+('Valtteri', 'Bottas', 77, 9, 'Finlandia'),
+('Sergio', 'Checo', 11, 10, 'México');
+
+-- ================================
+-- TABLA: circuitos
+-- ================================
+INSERT INTO circuitos (nombre, pais, ciudad, longitud_km, vueltas) VALUES
+('Albert Park Circuit', 'Australia', 'Melbourne', 5.278, 58),
+('Shanghai International Circuit', 'China', 'Shanghai', 5.451, 56),
+('Suzuka Circuit', 'Japón', 'Suzuka', 5.807, 53),
+('Bahréin International Circuit', 'Baréin', 'Sakhir', 5.412, 57),
+('Jeddah Corniche Circuit', 'Arabia Saudita', 'Jeddah', 6.174, 50),
+('Miami International Autodrome', 'EEUU', 'Miami Gardens', 5.412, 57),
+('Circuit Gilles Villeneuve', 'Canadá', 'Montreal', 4.361, 70),
+('Circuit de Monaco', 'Mónaco', 'Montecarlo', 3.337, 78),
+('Circuit de Barcelona-Catalunya', 'España', 'Barcelona', 4.675, 66),
+('Red Bull Ring', 'Austria', 'Spielberg', 4.318, 71),
+('Silverstone Circuit', 'Reino Unido', 'Silverstone', 5.891, 52),
+('Spa-Francorchamps', 'Bélgica', 'Spa', 7.004, 44),
+('Hungaroring', 'Hungría', 'Budapest', 4.381, 70),
+('Zandvoort Circuit', 'Países Bajos', 'Zandvoort', 4.259, 72),
+('Autódromo Nacional de Madrid', 'España', 'Madrid', 5.400, 60);
+
+-- ================================
+-- TABLA: grandes_premios
+-- ================================
+INSERT INTO grandes_premios (temporada_id, circuito_id, nombre, fecha, ronda) VALUES
+(1, 1, 'Gran Premio de Australia', '2026-03-08', 1),
+(1, 2, 'Gran Premio de China', '2026-03-15', 2),
+(1, 3, 'Gran Premio de Japón', '2026-03-29', 3),
+(1, 4, 'Gran Premio de Baréin', '2026-04-12', 4),
+(1, 5, 'Gran Premio de Arabia Saudita', '2026-04-19', 5),
+(1, 6, 'Gran Premio de Miami', '2026-05-03', 6);
+
+-- ================================
+-- TABLA: productos_merchandising
+-- ================================
+INSERT INTO productos_merchandising (nombre, descripcion, precio, equipo_id, categoria, stock, destacado) VALUES
+('Camiseta Red Bull Racing 2026', 'Camiseta oficial del equipo Red Bull Racing temporada 2026', 79.99, 1, 'Camiseta', 150, TRUE),
+('Gorra Ferrari 2026', 'Gorra oficial Ferrari F1 Team 2026', 39.99, 2, 'Gorra', 200, TRUE),
+('Chaqueta Mercedes 2026', 'Chaqueta oficial Mercedes AMG F1 Team', 149.99, 3, 'Chaqueta', 75, FALSE),
+('Camiseta McLaren 2026', 'Camiseta oficial McLaren Racing temporada 2026', 74.99, 4, 'Camiseta', 120, TRUE),
+('Gorra Aston Martin 2026', 'Gorra Aston Martin F1 Team 2026', 44.99, 5, 'Gorra', 180, FALSE);
+
+-- ================================
+-- TABLA: tipos_entradas
+-- ================================
+INSERT INTO tipos_entradas (nombre, descripcion, precio, beneficios, color) VALUES
+('General', 'Acceso general al circuito', 199.99, 'Acceso a gradas generales|Vista de la carrera|Pantallas gigantes', '#4A5568'),
+('Tribuna Principal', 'Asiento en la tribuna principal', 499.99, 'Asiento numerado|Vista privilegiada|Acceso a zona VIP|Pantalla personal', '#2D3748'),
+('Paddock Club', 'Experiencia VIP completa', 1999.99, 'Acceso al paddock|Comida y bebida incluida|Meet & Greet con pilotos|Asiento premium|Regalos exclusivos', '#D69E2E'),
+('Weekend Pass', 'Acceso a todo el fin de semana', 399.99, 'Viernes, Sábado y Domingo|Entrenamientos libres|Clasificación|Carrera|Gradas generales', '#38A169');
+
+-- ================================
+-- TABLA: noticias
+-- ================================
+INSERT INTO noticias (titulo, contenido, resumen, categoria, destacada) VALUES
+('Verstappen domina el inicio de temporada 2026', 'Max Verstappen gana el Gran Premio de Australia con autoridad...', 'El piloto neerlandés inicia la temporada con fuerza', 'Carrera', TRUE),
+('Ferrari presenta su monoplaza 2026', 'La Scuderia Ferrari ha presentado el coche para la temporada 2026...', 'El equipo busca desafiar a Red Bull esta temporada', 'Equipo', TRUE),
+('Hamilton regresa a Mercedes para 2026', 'Lewis Hamilton sigue en Mercedes con contrato renovado...', 'El heptacampeón continúa su trayectoria en F1', 'Piloto', FALSE);
+
+-- ================================
+-- TABLA: clasificacion_pilotos (ejemplo inicial)
+-- ================================
+INSERT INTO clasificacion_pilotos (temporada_id, piloto_id, puntos_totales, posicion) VALUES
+(1, 1, 25, 1),
+(1, 2, 18, 2),
+(1, 3, 15, 3),
+(1, 4, 12, 4),
+(1, 5, 10, 5);
+
+-- ================================
+-- TABLA: clasificacion_constructores (ejemplo inicial)
+-- ================================
+INSERT INTO clasificacion_constructores (temporada_id, equipo_id, puntos_totales, posicion) VALUES
+(1, 1, 43, 1),
+(1, 2, 27, 2),
+(1, 3, 22, 3),
+(1, 4, 16, 4),
+(1, 5, 10, 5);
+
+
+INSERT INTO noticias (titulo, contenido, resumen, categoria, destacada) VALUES
+('Red Bull presenta actualizaciones aerodinámicas', 'Red Bull Racing ha mostrado mejoras en su monoplaza para aumentar la velocidad en curvas...', 'El equipo austríaco optimiza su RB26 para dominar la temporada', 'Equipo', TRUE),
+('Leclerc logra su primera victoria de 2026', 'Charles Leclerc gana el Gran Premio de Mónaco tras una carrera estratégica...', 'Ferrari celebra su primera victoria de la temporada', 'Carrera', TRUE),
+('Hamilton busca revancha en Canadá', 'Lewis Hamilton apunta a mejorar resultados tras un inicio complicado...', 'Mercedes quiere volver a los podios rápidamente', 'Piloto', FALSE),
+('McLaren sorprende en clasificación', 'Oscar Piastri logra una pole inesperada para McLaren en Barcelona...', 'El equipo británico muestra competitividad creciente', 'Equipo', FALSE),
+('Verstappen y Pérez lideran campeonato de constructores', 'Red Bull se posiciona fuerte tras varias carreras consecutivas...', 'El equipo mantiene ventaja sobre Ferrari y Mercedes', 'Carrera', TRUE),
+('Rumores: Nuevo contrato para Sainz', 'Carlos Sainz podría extender su contrato con Ferrari hasta 2028...', 'La Scuderia busca estabilidad en su alineación de pilotos', 'Rumor', FALSE),
+('Alpine presenta mejoras técnicas en motor', 'Alpine introduce mejoras en el motor de su A526 para aumentar fiabilidad...', 'El equipo francés busca puntos clave en cada carrera', 'Técnica', FALSE),
+('Haas sorprende en clasificación de Hungría', 'Kevin Magnussen coloca el Haas en los primeros puestos de salida...', 'El equipo estadounidense busca repetir rendimiento en carrera', 'Equipo', FALSE),
+('Williams ficha nuevo ingeniero jefe', 'Williams anuncia cambios en su departamento técnico para mejorar resultados...', 'El equipo británico busca recuperar competitividad', 'Equipo', FALSE);
+
+-- Entradas para Gran Premio de Australia
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(3, 1, 500, '2026-01-15', '2026-03-20', TRUE),
+(3, 2, 200, '2026-01-15', '2026-03-20', TRUE),
+(3, 3, 50, '2026-01-15', '2026-03-20', TRUE),
+(3, 4, 150, '2026-01-15', '2026-03-20', TRUE);
+
+-- Gran Premio de Bahréin
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(4, 1, 500, '2026-01-15', '2026-03-01', TRUE),
+(4, 2, 200, '2026-01-15', '2026-03-01', TRUE),
+(4, 3, 50, '2026-01-15', '2026-03-01', TRUE),
+(4, 4, 150, '2026-01-15', '2026-03-01', TRUE);
+
+-- Gran Premio de Mónaco
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(5, 1, 400, '2026-01-15', '2026-05-20', TRUE),
+(5, 2, 150, '2026-01-15', '2026-05-20', TRUE),
+(5, 3, 30, '2026-01-15', '2026-05-20', TRUE),
+(5, 4, 100, '2026-01-15', '2026-05-20', TRUE);
+
+-- Gran Premio de España
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(6, 1, 450, '2026-01-15', '2026-06-05', TRUE),
+(6, 2, 180, '2026-01-15', '2026-06-05', TRUE),
+(6, 3, 40, '2026-01-15', '2026-06-05', TRUE),
+(6, 4, 120, '2026-01-15', '2026-06-05', TRUE);
+
+USE f1_project;
+
+-- ================================
+-- LIMPIAR ENTRADAS Y NOTICIAS
+-- ================================
+DELETE FROM entradas_disponibles;
+DELETE FROM noticias;
+
+-- ================================
+-- INSERTAR NOTICIAS (hasta 9)
+-- ================================
+INSERT INTO noticias (titulo, contenido, resumen, categoria, destacada) VALUES
+('Verstappen domina el inicio de temporada 2026', 'Max Verstappen gana el Gran Premio de Australia con autoridad...', 'El piloto neerlandés inicia la temporada con fuerza', 'Carrera', TRUE),
+('Ferrari presenta su monoplaza 2026', 'La Scuderia Ferrari ha presentado el coche para la temporada 2026...', 'El equipo busca desafiar a Red Bull esta temporada', 'Equipo', TRUE),
+('Hamilton regresa a Mercedes para 2026', 'Lewis Hamilton sigue en Mercedes con contrato renovado...', 'El heptacampeón continúa su trayectoria en F1', 'Piloto', FALSE),
+('Red Bull presenta mejoras aerodinámicas', 'Red Bull Racing ha mostrado mejoras en su monoplaza para aumentar la velocidad en curvas...', 'El equipo austríaco optimiza su RB26 para dominar la temporada', 'Equipo', TRUE),
+('Leclerc logra su primera victoria de 2026', 'Charles Leclerc gana el Gran Premio de Mónaco tras una carrera estratégica...', 'Ferrari celebra su primera victoria de la temporada', 'Carrera', TRUE),
+('Hamilton busca revancha en Canadá', 'Lewis Hamilton apunta a mejorar resultados tras un inicio complicado...', 'Mercedes quiere volver a los podios rápidamente', 'Piloto', FALSE),
+('McLaren sorprende en clasificación', 'Oscar Piastri logra una pole inesperada para McLaren en Barcelona...', 'El equipo británico muestra competitividad creciente', 'Equipo', FALSE),
+('Rumores: Nuevo contrato para Sainz', 'Carlos Sainz podría extender su contrato con Ferrari hasta 2028...', 'La Scuderia busca estabilidad en su alineación de pilotos', 'Rumor', FALSE),
+('Alpine presenta mejoras técnicas en motor', 'Alpine introduce mejoras en el motor de su A526 para aumentar fiabilidad...', 'El equipo francés busca puntos clave en cada carrera', 'Técnica', FALSE);
+
+-- ================================
+-- INSERTAR ENTRADAS DISPONIBLES 2026
+-- ================================
+-- Consultar IDs reales de grandes premios
+-- Ejemplo: 
+-- SELECT id, nombre FROM grandes_premios WHERE temporada_id = 1;
+
+-- Gran Premio de Australia
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(1, 1, 500, '2026-01-15', '2026-03-06', TRUE),
+(1, 2, 200, '2026-01-15', '2026-03-06', TRUE),
+(1, 3, 50, '2026-01-15', '2026-03-06', TRUE),
+(1, 4, 150, '2026-01-15', '2026-03-06', TRUE);
+
+-- Gran Premio de China
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(2, 1, 400, '2026-01-15', '2026-03-13', TRUE),
+(2, 2, 150, '2026-01-15', '2026-03-13', TRUE),
+(2, 3, 30, '2026-01-15', '2026-03-13', TRUE),
+(2, 4, 100, '2026-01-15', '2026-03-13', TRUE);
+
+-- Gran Premio de Japón
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(3, 1, 500, '2026-01-15', '2026-03-27', TRUE),
+(3, 2, 200, '2026-01-15', '2026-03-27', TRUE),
+(3, 3, 50, '2026-01-15', '2026-03-27', TRUE),
+(3, 4, 150, '2026-01-15', '2026-03-27', TRUE);
+
+-- Gran Premio de Baréin
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(4, 1, 400, '2026-01-15', '2026-04-10', TRUE),
+(4, 2, 150, '2026-01-15', '2026-04-10', TRUE),
+(4, 3, 30, '2026-01-15', '2026-04-10', TRUE),
+(4, 4, 100, '2026-01-15', '2026-04-10', TRUE);
+
+-- Gran Premio de Arabia Saudita
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(5, 1, 450, '2026-01-15', '2026-04-17', TRUE),
+(5, 2, 180, '2026-01-15', '2026-04-17', TRUE),
+(5, 3, 40, '2026-01-15', '2026-04-17', TRUE),
+(5, 4, 120, '2026-01-15', '2026-04-17', TRUE);
+
+-- Gran Premio de Miami
+INSERT INTO entradas_disponibles (gran_premio_id, tipo_entrada_id, cantidad_disponible, fecha_venta_inicio, fecha_venta_fin, activa) VALUES
+(6, 1, 500, '2026-01-15', '2026-05-01', TRUE),
+(6, 2, 200, '2026-01-15', '2026-05-01', TRUE),
+(6, 3, 50, '2026-01-15', '2026-05-01', TRUE),
+(6, 4, 150, '2026-01-15', '2026-05-01', TRUE);
+
+INSERT INTO productos_merchandising (nombre, descripcion, precio, equipo_id, categoria, stock, destacado, imagen_url) VALUES
+('Sudadera Red Bull Racing 2026', 'Sudadera oficial Red Bull Racing 2026 con capucha', 129.99, 1, 'Chaqueta', 100, TRUE, 'assets/img/sudadera-redbull.jpg'),
+('Gorra Mercedes AMG 2026', 'Gorra oficial Mercedes AMG F1 Team 2026', 39.99, 3, 'Gorra', 150, TRUE, 'assets/img/gorra-mercedes.jpg'),
+('Miniatura Ferrari F1 2026', 'Modelo coleccionable Ferrari SF26 1:18', 59.99, 2, 'Coleccionable', 80, FALSE, 'assets/img/miniatura-ferrari.jpg'),
+('Llavero McLaren 2026', 'Llavero oficial McLaren Racing temporada 2026', 14.99, 4, 'Accesorio', 250, FALSE, 'assets/img/llavero-mclaren.jpg');
+
